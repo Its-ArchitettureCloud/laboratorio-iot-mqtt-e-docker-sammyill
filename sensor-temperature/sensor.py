@@ -14,7 +14,6 @@ class SensorConfig:
     sensor_name: str
     min_value: float
     max_value: float
-    guard_level: float
     mqtt_host: str
     mqtt_port: int
     mqtt_username: str | None
@@ -50,9 +49,8 @@ def read_config() -> SensorConfig:
 
     config = SensorConfig(
         sensor_name=sensor_name,
-        min_value=read_float_env("MIN_VALUE", 10.0),
-        max_value=read_float_env("MAX_VALUE", 40.0),
-        guard_level=read_float_env("GUARD_LEVEL", 30.0),
+        min_value=read_float_env("MIN_VALUE", 20.0),
+        max_value=read_float_env("MAX_VALUE", 30.0),
         mqtt_host=os.getenv("MQTT_HOST", "localhost"),
         mqtt_port=read_int_env("MQTT_PORT", 883),
         mqtt_username=os.getenv("MQTT_USERNAME"),
@@ -108,7 +106,6 @@ def build_message(config: SensorConfig, temperature: float) -> str:
         "type": "temperature",
         "value": round(temperature, 2),
         "unit": "celsius",
-        "guard_level": config.guard_level,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -122,7 +119,7 @@ def run_sensor() -> None:
 
     print(
         f"{config.sensor_name} running: range={config.min_value}-{config.max_value}, "
-        f"guard_level={config.guard_level}, topic={config.mqtt_topic}",
+        f"interval={config.interval_seconds}s, topic={config.mqtt_topic}",
         flush=True,
     )
 
@@ -131,11 +128,10 @@ def run_sensor() -> None:
             temperature = random.uniform(config.min_value, config.max_value)
             print(f"Generated temperature: {temperature:.2f} C", flush=True)
 
-            if temperature > config.guard_level:
-                message = build_message(config, temperature)
-                result = client.publish(config.mqtt_topic, message, qos=1)
-                result.wait_for_publish()
-                print(f"Published alert: {message}", flush=True)
+            message = build_message(config, temperature)
+            result = client.publish(config.mqtt_topic, message, qos=1)
+            result.wait_for_publish()
+            print(f"Published temperature: {message}", flush=True)
 
             time.sleep(config.interval_seconds)
     except KeyboardInterrupt:

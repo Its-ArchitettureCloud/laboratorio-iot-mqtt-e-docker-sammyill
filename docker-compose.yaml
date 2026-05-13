@@ -1,3 +1,17 @@
+x-mqtt-temperature-sensor-base: &mqtt-temperature-sensor-base
+  build: ./sensor-temperature
+  depends_on:
+    - mosquitto
+
+x-mqtt-temperature-sensor-environment: &mqtt-temperature-sensor-environment
+  MIN_VALUE: 20
+  MAX_VALUE: 30
+  INTERVAL_SECONDS: 5
+  MQTT_HOST: mosquitto
+  MQTT_PORT: 883
+  MQTT_USERNAME: ${MQTT_USERNAME:?Set MQTT_USERNAME in .env}
+  MQTT_PASSWORD: ${MQTT_PASSWORD:?Set MQTT_PASSWORD in .env}
+
 x-http-sensor-base: &http-sensor-base
   build: ./sensor-https
   depends_on:
@@ -33,145 +47,65 @@ services:
       - mosquitto
       - mailhog
 
-  martini_temperature:
-    build: ./sensor-temperature
-    depends_on:
-      - mosquitto
+  mqtt_temperature_01:
+    <<: *mqtt-temperature-sensor-base
     environment:
-      SENSOR_NAME: martini_temperature
-      MIN_VALUE: 18
-      MAX_VALUE: 26
-      GUARD_LEVEL: 24
-      MQTT_HOST: mosquitto
-      MQTT_PORT: 883
-      MQTT_USERNAME: ${MQTT_USERNAME:?Set MQTT_USERNAME in .env}
-      MQTT_PASSWORD: ${MQTT_PASSWORD:?Set MQTT_PASSWORD in .env}
+      <<: *mqtt-temperature-sensor-environment
+      SENSOR_NAME: mqtt_temperature_01
 
-  martini_humidity:
-    build: ./sensor-humidity
-    depends_on:
-      - mosquitto
+  mqtt_temperature_02:
+    <<: *mqtt-temperature-sensor-base
     environment:
-      SENSOR_NAME: martini_humidity
-      MIN_VALUE: 60
-      MAX_VALUE: 75
-      GUARD_LEVEL: 72
-      MQTT_HOST: mosquitto
-      MQTT_PORT: 883
-      MQTT_USERNAME: ${MQTT_USERNAME:?Set MQTT_USERNAME in .env}
-      MQTT_PASSWORD: ${MQTT_PASSWORD:?Set MQTT_PASSWORD in .env}
+      <<: *mqtt-temperature-sensor-environment
+      SENSOR_NAME: mqtt_temperature_02
 
-  rodrigez_temperature:
-    build: ./sensor-temperature
-    depends_on:
-      - mosquitto
+  mqtt_temperature_03:
+    <<: *mqtt-temperature-sensor-base
     environment:
-      SENSOR_NAME: rodrigez_temperature
-      MIN_VALUE: 20
-      MAX_VALUE: 30
-      GUARD_LEVEL: 28
-      MQTT_HOST: mosquitto
-      MQTT_PORT: 883
-      MQTT_USERNAME: ${MQTT_USERNAME:?Set MQTT_USERNAME in .env}
-      MQTT_PASSWORD: ${MQTT_PASSWORD:?Set MQTT_PASSWORD in .env}
+      <<: *mqtt-temperature-sensor-environment
+      SENSOR_NAME: mqtt_temperature_03
 
-  rodrigez_humidity:
-    build: ./sensor-humidity
-    depends_on:
-      - mosquitto
+  mqtt_temperature_04:
+    <<: *mqtt-temperature-sensor-base
     environment:
-      SENSOR_NAME: rodrigez_humidity
-      MIN_VALUE: 65
-      MAX_VALUE: 85
-      GUARD_LEVEL: 80
-      MQTT_HOST: mosquitto
-      MQTT_PORT: 883
-      MQTT_USERNAME: ${MQTT_USERNAME:?Set MQTT_USERNAME in .env}
-      MQTT_PASSWORD: ${MQTT_PASSWORD:?Set MQTT_PASSWORD in .env}
+      <<: *mqtt-temperature-sensor-environment
+      SENSOR_NAME: mqtt_temperature_04
 
-  chian_temperature:
-    build: ./sensor-temperature
-    depends_on:
-      - mosquitto
+  mqtt_temperature_05:
+    <<: *mqtt-temperature-sensor-base
     environment:
-      SENSOR_NAME: chian_temperature
-      MIN_VALUE: 16
-      MAX_VALUE: 24
-      GUARD_LEVEL: 22
-      MQTT_HOST: mosquitto
-      MQTT_PORT: 883
-      MQTT_USERNAME: ${MQTT_USERNAME:?Set MQTT_USERNAME in .env}
-      MQTT_PASSWORD: ${MQTT_PASSWORD:?Set MQTT_PASSWORD in .env}
+      <<: *mqtt-temperature-sensor-environment
+      SENSOR_NAME: mqtt_temperature_05
 
-  chian_humidity:
-    build: ./sensor-humidity
-    depends_on:
-      - mosquitto
+  mqtt_temperature_06:
+    <<: *mqtt-temperature-sensor-base
     environment:
-      SENSOR_NAME: chian_humidity
-      MIN_VALUE: 60
-      MAX_VALUE: 90
-      GUARD_LEVEL: 84
-      MQTT_HOST: mosquitto
-      MQTT_PORT: 883
-      MQTT_USERNAME: ${MQTT_USERNAME:?Set MQTT_USERNAME in .env}
-      MQTT_PASSWORD: ${MQTT_PASSWORD:?Set MQTT_PASSWORD in .env}
+      <<: *mqtt-temperature-sensor-environment
+      SENSOR_NAME: mqtt_temperature_06
 
-  legatou_temperature:
-    build: ./sensor-temperature
-    depends_on:
-      - mosquitto
+  mqtt_temperature_07:
+    <<: *mqtt-temperature-sensor-base
     environment:
-      SENSOR_NAME: legatou_temperature
-      MIN_VALUE: 22
-      MAX_VALUE: 34
-      GUARD_LEVEL: 31
-      MQTT_HOST: mosquitto
-      MQTT_PORT: 883
-      MQTT_USERNAME: ${MQTT_USERNAME:?Set MQTT_USERNAME in .env}
-      MQTT_PASSWORD: ${MQTT_PASSWORD:?Set MQTT_PASSWORD in .env}
+      <<: *mqtt-temperature-sensor-environment
+      SENSOR_NAME: mqtt_temperature_07
 
-  legatou_humidity:
-    build: ./sensor-humidity
-    depends_on:
-      - mosquitto
+  mqtt_temperature_08:
+    <<: *mqtt-temperature-sensor-base
     environment:
-      SENSOR_NAME: legatou_humidity
-      MIN_VALUE: 70
-      MAX_VALUE: 90
-      GUARD_LEVEL: 86
-      MQTT_HOST: mosquitto
-      MQTT_PORT: 883
-      MQTT_USERNAME: ${MQTT_USERNAME:?Set MQTT_USERNAME in .env}
-      MQTT_PASSWORD: ${MQTT_PASSWORD:?Set MQTT_PASSWORD in .env}
+      <<: *mqtt-temperature-sensor-environment
+      SENSOR_NAME: mqtt_temperature_08
 
-  hanks_temperature:
-    build: ./sensor-temperature
-    depends_on:
-      - mosquitto
+  mqtt_temperature_09:
+    <<: *mqtt-temperature-sensor-base
     environment:
-      SENSOR_NAME: hanks_temperature
-      MIN_VALUE: 15
-      MAX_VALUE: 28
-      GUARD_LEVEL: 25
-      MQTT_HOST: mosquitto
-      MQTT_PORT: 883
-      MQTT_USERNAME: ${MQTT_USERNAME:?Set MQTT_USERNAME in .env}
-      MQTT_PASSWORD: ${MQTT_PASSWORD:?Set MQTT_PASSWORD in .env}
+      <<: *mqtt-temperature-sensor-environment
+      SENSOR_NAME: mqtt_temperature_09
 
-  hanks_humidity:
-    build: ./sensor-humidity
-    depends_on:
-      - mosquitto
+  mqtt_temperature_10:
+    <<: *mqtt-temperature-sensor-base
     environment:
-      SENSOR_NAME: hanks_humidity
-      MIN_VALUE: 62
-      MAX_VALUE: 82
-      GUARD_LEVEL: 78
-      MQTT_HOST: mosquitto
-      MQTT_PORT: 883
-      MQTT_USERNAME: ${MQTT_USERNAME:?Set MQTT_USERNAME in .env}
-      MQTT_PASSWORD: ${MQTT_PASSWORD:?Set MQTT_PASSWORD in .env}
+      <<: *mqtt-temperature-sensor-environment
+      SENSOR_NAME: mqtt_temperature_10
 
   http_sensor_01:
     <<: *http-sensor-base
@@ -246,3 +180,6 @@ services:
       DOCKER_INFLUXDB_INIT_ORG: ${INFLUXDB_ORG}
       DOCKER_INFLUXDB_INIT_BUCKET: ${INFLUXDB_BUCKET}
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUXDB_TOKEN}
+
+volumes:
+  influxdb-data:
