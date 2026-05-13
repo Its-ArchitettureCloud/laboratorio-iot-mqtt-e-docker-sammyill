@@ -1,3 +1,14 @@
+x-http-sensor-base: &http-sensor-base
+  build: ./sensor-https
+  depends_on:
+    - nodered
+
+x-http-sensor-environment: &http-sensor-environment
+  HTTP_SERVER: nodered
+  HTTP_PORT: 1880
+  HTTP_ENDPOINT: /sensor
+  SEND_INTERVAL: 5
+
 services:
   mosquitto:
     image: eclipse-mosquitto:2
@@ -161,3 +172,77 @@ services:
       MQTT_PORT: 883
       MQTT_USERNAME: ${MQTT_USERNAME:?Set MQTT_USERNAME in .env}
       MQTT_PASSWORD: ${MQTT_PASSWORD:?Set MQTT_PASSWORD in .env}
+
+  http_sensor_01:
+    <<: *http-sensor-base
+    environment:
+      <<: *http-sensor-environment
+      SENSOR_ID: sensore01
+
+  http_sensor_02:
+    <<: *http-sensor-base
+    environment:
+      <<: *http-sensor-environment
+      SENSOR_ID: sensore02
+
+  http_sensor_03:
+    <<: *http-sensor-base
+    environment:
+      <<: *http-sensor-environment
+      SENSOR_ID: sensore03
+
+  http_sensor_04:
+    <<: *http-sensor-base
+    environment:
+      <<: *http-sensor-environment
+      SENSOR_ID: sensore04
+
+  http_sensor_05:
+    <<: *http-sensor-base
+    environment:
+      <<: *http-sensor-environment
+      SENSOR_ID: sensore05
+
+  http_sensor_06:
+    <<: *http-sensor-base
+    environment:
+      <<: *http-sensor-environment
+      SENSOR_ID: sensore06
+
+  http_sensor_07:
+    <<: *http-sensor-base
+    environment:
+      <<: *http-sensor-environment
+      SENSOR_ID: sensore07
+
+  http_sensor_08:
+    <<: *http-sensor-base
+    environment:
+      <<: *http-sensor-environment
+      SENSOR_ID: sensore08
+
+  http_sensor_09:
+    <<: *http-sensor-base
+    environment:
+      <<: *http-sensor-environment
+      SENSOR_ID: sensore09
+
+  http_sensor_10:
+    <<: *http-sensor-base
+    environment:
+      <<: *http-sensor-environment
+      SENSOR_ID: sensore10
+  influxdb:
+    image: influxdb:2
+    container_name: iot-influxdb
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: ${INFLUXDB_USERNAME}
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${INFLUXDB_PASSWORD}
+      DOCKER_INFLUXDB_INIT_ORG: ${INFLUXDB_ORG}
+      DOCKER_INFLUXDB_INIT_BUCKET: ${INFLUXDB_BUCKET}
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUXDB_TOKEN}
