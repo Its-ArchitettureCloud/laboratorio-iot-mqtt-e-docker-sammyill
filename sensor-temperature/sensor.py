@@ -9,32 +9,21 @@ from datetime import datetime, timezone
 import paho.mqtt.client as mqtt
 
 
+MIN_TEMPERATURE = 20.0
+MAX_TEMPERATURE = 30.0
+INTERVAL_SECONDS = 5.0
+
+
 @dataclass(frozen=True)
 class SensorConfig:
     """Runtime settings read from Docker Compose environment variables."""
 
     sensor_name: str
-    min_value: float
-    max_value: float
     mqtt_host: str
     mqtt_port: int
     mqtt_username: str | None
     mqtt_password: str | None
     mqtt_topic: str
-    interval_seconds: float
-
-
-def read_float_env(name: str, default: float) -> float:
-    """Read a decimal environment variable and fail clearly if it is invalid."""
-
-    value = os.getenv(name)
-    if value is None:
-        return default
-
-    try:
-        return float(value)
-    except ValueError as error:
-        raise ValueError(f"{name} must be a number, got {value!r}") from error
 
 
 def read_int_env(name: str, default: int) -> int:
@@ -57,21 +46,12 @@ def read_config() -> SensorConfig:
 
     config = SensorConfig(
         sensor_name=sensor_name,
-        min_value=read_float_env("MIN_VALUE", 20.0),
-        max_value=read_float_env("MAX_VALUE", 30.0),
         mqtt_host=os.getenv("MQTT_HOST", "localhost"),
         mqtt_port=read_int_env("MQTT_PORT", 883),
         mqtt_username=os.getenv("MQTT_USERNAME"),
         mqtt_password=os.getenv("MQTT_PASSWORD"),
         mqtt_topic=os.getenv("MQTT_TOPIC", f"sensors/{sensor_name}/temperature"),
-        interval_seconds=read_float_env("INTERVAL_SECONDS", 5.0),
     )
-
-    if config.min_value > config.max_value:
-        raise ValueError("MIN_VALUE must be less than or equal to MAX_VALUE")
-
-    if config.interval_seconds <= 0:
-        raise ValueError("INTERVAL_SECONDS must be greater than 0")
 
     return config
 
@@ -141,14 +121,15 @@ def run_sensor() -> None:
     connect_with_retry(client, config)
 
     print(
-        f"{config.sensor_name} running: range={config.min_value}-{config.max_value}, "
-        f"interval={config.interval_seconds}s, topic={config.mqtt_topic}",
+        f"{config.sensor_name} running: "
+        f"range={MIN_TEMPERATURE}-{MAX_TEMPERATURE}, "
+        f"interval={INTERVAL_SECONDS}s, topic={config.mqtt_topic}",
         flush=True,
     )
 
     try:
         while True:
-            temperature = random.uniform(config.min_value, config.max_value)
+            temperature = random.uniform(MIN_TEMPERATURE, MAX_TEMPERATURE)
             print(f"Generated temperature: {temperature:.2f} C", flush=True)
 
             message = build_message(config, temperature)
@@ -166,7 +147,7 @@ def run_sensor() -> None:
                 flush=True,
             )
 
-            time.sleep(config.interval_seconds)
+            time.sleep(INTERVAL_SECONDS)
     except KeyboardInterrupt:
         print("Stopping temperature sensor.", flush=True)
     finally:
