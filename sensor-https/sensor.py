@@ -39,9 +39,11 @@ def build_payload(temperature):
     """Build the JSON body that will be sent to Node-RED."""
 
     return {
-        "sensor_id": SENSOR_ID,
-        "temperatura": temperature,
-        "timestamp": time.time(),
+        "sensor": SENSOR_ID,
+        "type": "temperature",
+        "unit": "celsius",
+        "temperatura": round(temperature, 2),
+        "timestamp": time.time(), 
     }
 
 

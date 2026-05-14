@@ -125,8 +125,8 @@ def build_message(config: SensorConfig, temperature: float) -> str:
     payload = {
         "sensor": config.sensor_name,
         "type": "temperature",
-        "value": round(temperature, 2),
         "unit": "celsius",
+        "temperatura": round(temperature, 2),
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
