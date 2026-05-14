@@ -43,9 +43,12 @@ services:
     image: nodered/node-red:latest
     ports:
       - "1880:1880"
+    volumes:
+      - nodered-data:/data
     depends_on:
       - mosquitto
       - mailhog
+      - influxdb
 
   mqtt_temperature_01:
     <<: *mqtt-temperature-sensor-base
@@ -183,3 +186,4 @@ services:
 
 volumes:
   influxdb-data:
+  nodered-data:
