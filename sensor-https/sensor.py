@@ -1,10 +1,12 @@
-import time
-import random
 import os
+import random
 import socket
+import time
+
 import requests
 
-# === Parametri configurabili via environment ===
+
+# Runtime settings come from Docker Compose environment variables.
 SERVER = os.getenv("HTTP_SERVER", "nodered")
 PORT = int(os.getenv("HTTP_PORT", "1880"))
 ENDPOINT = os.getenv("HTTP_ENDPOINT", "/sensor")
@@ -17,41 +19,63 @@ print(f"[BOOT] Sensore {SENSOR_ID} avviato", flush=True)
 print(f"[BOOT] HTTP endpoint: {URL}", flush=True)
 print(f"[BOOT] Intervallo invio: {INTERVAL}s", flush=True)
 
-# === Attesa attiva del server HTTP ===
+
 def wait_for_server(host, port):
+    """Wait until Node-RED accepts TCP connections."""
+
     print("[WAIT] Attendo il server HTTP...", flush=True)
     while True:
         try:
+            # create_connection only checks reachability; it does not send sensor data.
             socket.create_connection((host, port), timeout=5)
             print("[WAIT] Server HTTP raggiungibile", flush=True)
             return
-        except OSError as e:
-            print(f"[WAIT] Server non disponibile ({e}), ritento...", flush=True)
+        except OSError as error:
+            print(f"[WAIT] Server non disponibile ({error}), ritento...", flush=True)
             time.sleep(2)
+
+
+def build_payload(temperature):
+    """Build the JSON body that will be sent to Node-RED."""
+
+    return {
+        "sensor_id": SENSOR_ID,
+        "temperatura": temperature,
+        "timestamp": time.time(),
+    }
+
+
+def send_payload(payload):
+    """Send one HTTP POST request and return the response plus client latency."""
+
+    # perf_counter is best for measuring short durations because it is monotonic.
+    request_started_at = time.perf_counter()
+    response = requests.post(URL, json=payload, timeout=5)
+    request_latency_seconds = time.perf_counter() - request_started_at
+
+    return response, request_latency_seconds
+
 
 wait_for_server(SERVER, PORT)
 
 print("[HTTP] Pronto per invio dati", flush=True)
 
-# === Loop principale del sensore ===
+# Main loop: generate one reading, send it to Node-RED, then wait.
 while True:
+    # Generate a simulated temperature value for this sensor.
     temperatura = round(random.uniform(15, 35), 1)
-
-    payload = {
-        "sensor_id": SENSOR_ID,
-        "temperatura": temperatura,
-        "timestamp": time.time()
-    }
+    payload = build_payload(temperatura)
 
     try:
-        response = requests.post(URL, json=payload, timeout=5)
+        response, client_latency = send_payload(payload)
 
         print(
-            f"[POST] {URL} → {payload} (status={response.status_code})",
-            flush=True
+            f"[POST] {URL} -> {payload} (status={response.status_code})",
+            flush=True,
         )
+        print(f"[HTTP LATENCY] {client_latency:.4f}s", flush=True)
 
-    except requests.exceptions.RequestException as e:
-        print(f"[ERROR] Invio fallito: {e}", flush=True)
+    except requests.exceptions.RequestException as error:
+        print(f"[ERROR] Invio fallito: {error}", flush=True)
 
     time.sleep(INTERVAL)
