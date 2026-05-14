@@ -49,6 +49,8 @@ services:
     build: ./gateway
     ports:
       - "5000:5000"
+    volumes:
+      - gateway-data:/data
     depends_on:
       - mosquitto
     environment:
@@ -57,6 +59,7 @@ services:
       MQTT_USERNAME: ${MQTT_USERNAME:?Set MQTT_USERNAME in .env}
       MQTT_PASSWORD: ${MQTT_PASSWORD:?Set MQTT_PASSWORD in .env}
       MQTT_TOPIC_TEMPLATE: sensors/{sensor_id}/temperature
+      GATEWAY_DB_PATH: /data/gateway_queue.db
 
   mailhog:
     image: mailhog/mailhog:latest
@@ -182,5 +185,6 @@ services:
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUXDB_TOKEN}
 
 volumes:
+  gateway-data:
   influxdb-data:
   nodered-data:
