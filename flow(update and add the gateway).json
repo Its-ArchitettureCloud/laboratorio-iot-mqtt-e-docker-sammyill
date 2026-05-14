@@ -1,0 +1,373 @@
+[
+    {
+        "id": "5e254318e26697a3",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "6faf4c065b88aea4",
+        "type": "comment",
+        "z": "5e254318e26697a3",
+        "name": "WARNING: please check you have started this container with a volume that is mounted to /data\\n otherwise any flow changes are lost when you redeploy or upgrade the container\\n (e.g. upgrade to a more recent node-red docker image).\\n  If you are using named volumes you can ignore this warning.\\n Double click or see info side panel to learn how to start Node-RED in Docker to save your work",
+        "info": "\nTo start docker with a bind mount volume (-v option), for example:\n\n```\ndocker run -it -p 1880:1880 -v /home/user/node_red_data:/data --name mynodered nodered/node-red\n```\n\nwhere `/home/user/node_red_data` is a directory on your host machine where you want to store your flows.\n\nIf you do not do this then you can experiment and redploy flows, but if you restart or upgrade the container the flows will be disconnected and lost. \n\nThey will still exist in a hidden data volume, which can be recovered using standard docker techniques, but that is much more complex than just starting with a named volume as described above.",
+        "x": 350,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "cb4f19ee63914174",
+        "type": "function",
+        "z": "5e254318e26697a3",
+        "name": "data formatter per dashboard",
+        "func": "let data = msg.payload;\n\nif (Buffer.isBuffer(data)) {\n    data = data.toString();\n}\n\n\nif (typeof data === \"string\") {\n    try {\n        data = JSON.parse(data);\n    } catch (error) {\n        node.warn(\"Invalid JSON: \" + data);\n        return null;\n    }\n}\n\nmsg.topic = data.sensor;\nmsg.payload = Number(data.temperatura);\n\nreturn msg;\n\n ",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 520,
+        "y": 1340,
+        "wires": [
+            [
+                "3486aa33c94e2214",
+                "7c48bd1f794094c6"
+            ]
+        ]
+    },
+    {
+        "id": "46e3179953e34ef7",
+        "type": "http in",
+        "z": "5e254318e26697a3",
+        "name": "",
+        "url": "/sensor",
+        "method": "post",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 230,
+        "y": 1360,
+        "wires": [
+            [
+                "b67cb3b62510348a",
+                "67cee524490a4c90",
+                "cb4f19ee63914174"
+            ]
+        ]
+    },
+    {
+        "id": "3b20e83ec1539f3d",
+        "type": "mqtt in",
+        "z": "5e254318e26697a3",
+        "name": "",
+        "topic": "sensors/#",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "46190c69f815be04",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 240,
+        "y": 1240,
+        "wires": [
+            [
+                "cb4f19ee63914174",
+                "b67cb3b62510348a"
+            ]
+        ]
+    },
+    {
+        "id": "3486aa33c94e2214",
+        "type": "ui-chart",
+        "z": "5e254318e26697a3",
+        "group": "48c09e0a75f0f789",
+        "name": "Temperature over time",
+        "label": "Temperature over time",
+        "order": 2,
+        "chartType": "line",
+        "category": "topic",
+        "categoryType": "msg",
+        "xAxisLabel": "time ",
+        "xAxisProperty": "",
+        "xAxisPropertyType": "timestamp",
+        "xAxisType": "time",
+        "xAxisFormat": "",
+        "xAxisFormatType": "auto",
+        "xmin": "",
+        "xmax": "",
+        "yAxisLabel": "temperature over threshhold",
+        "yAxisProperty": "payload",
+        "yAxisPropertyType": "msg",
+        "ymin": "",
+        "ymax": "",
+        "bins": 10,
+        "action": "append",
+        "stackSeries": false,
+        "pointShape": "circle",
+        "pointRadius": 4,
+        "showLegend": true,
+        "removeOlder": 1,
+        "removeOlderUnit": "3600",
+        "removeOlderPoints": "",
+        "colors": [
+            "#0095ff",
+            "#ff0000",
+            "#ff7f0e",
+            "#2ca02c",
+            "#a347e1",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "textColor": [
+            "#666666"
+        ],
+        "textColorDefault": true,
+        "gridColor": [
+            "#e5e5e5"
+        ],
+        "gridColorDefault": true,
+        "width": 6,
+        "height": 8,
+        "className": "",
+        "interpolation": "linear",
+        "x": 800,
+        "y": 1340,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "50d9ee7a80a65fa4",
+        "type": "influxdb out",
+        "z": "5e254318e26697a3",
+        "influxdb": "9bdd4dc21704b533",
+        "name": "influxdb",
+        "measurement": "temperature",
+        "precision": "",
+        "retentionPolicy": "",
+        "database": "database",
+        "precisionV18FluxV20": "ms",
+        "retentionPolicyV18Flux": "",
+        "org": "iot",
+        "bucket": "sensors",
+        "x": 760,
+        "y": 1220,
+        "wires": []
+    },
+    {
+        "id": "b67cb3b62510348a",
+        "type": "function",
+        "z": "5e254318e26697a3",
+        "name": "influxdb data formatting",
+        "func": "const myPayload=msg.payload;\nmsg.payload = [\n    {\n        temperature: Number(myPayload.temperatura),\n        //timestamp: myPayload.timestamp,\n    },\n    {\n        sensor: myPayload.sensor,\n        type: myPayload.type,\n        unit: myPayload.unit,\n    }\n];\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 510,
+        "y": 1280,
+        "wires": [
+            [
+                "50d9ee7a80a65fa4"
+            ]
+        ]
+    },
+    {
+        "id": "67cee524490a4c90",
+        "type": "function",
+        "z": "5e254318e26697a3",
+        "name": "httprespnse",
+        "func": "const temperatura = Number(msg.payload.temperatura);\n\nif (!Number.isFinite(temperatura)) {\n    node.warn(\"Invalid temperatura for InfluxDB: \" + JSON.stringify(msg.payload));\n    return null;\n}\n\nmsg.payload = [\n    {\n        value: temperatura\n    },\n    {\n        sensor: msg.sensor_id || \"unknown\",\n        type: \"temperature\",\n        unit: \"celsius\"\n    }\n];\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 370,
+        "y": 1480,
+        "wires": [
+            [
+                "babd2cfbae9a3336"
+            ]
+        ]
+    },
+    {
+        "id": "babd2cfbae9a3336",
+        "type": "http response",
+        "z": "5e254318e26697a3",
+        "name": "httpresponse",
+        "statusCode": "",
+        "headers": {},
+        "x": 550,
+        "y": 1480,
+        "wires": []
+    },
+    {
+        "id": "7c48bd1f794094c6",
+        "type": "debug",
+        "z": "5e254318e26697a3",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 720,
+        "y": 1420,
+        "wires": []
+    },
+    {
+        "id": "46190c69f815be04",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "mosquitto",
+        "port": "883",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "5",
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "48c09e0a75f0f789",
+        "type": "ui-group",
+        "name": "Group 1",
+        "page": "ae042993958c8757",
+        "width": 6,
+        "height": 1,
+        "order": -1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "9bdd4dc21704b533",
+        "type": "influxdb",
+        "hostname": "127.0.0.1",
+        "port": 8086,
+        "protocol": "http",
+        "database": "database",
+        "name": "influxdb",
+        "usetls": false,
+        "tls": "",
+        "influxdbVersion": "2.0",
+        "url": " http://influxdb:8086",
+        "timeout": 10,
+        "rejectUnauthorized": false
+    },
+    {
+        "id": "ae042993958c8757",
+        "type": "ui-page",
+        "name": "Page Name",
+        "ui": "3e39750aa89c7bab",
+        "path": "/page1",
+        "icon": "home",
+        "layout": "grid",
+        "theme": "9d304b66ab5d7347",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "order": -1,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "3e39750aa89c7bab",
+        "type": "ui-base",
+        "name": "UI Name",
+        "path": "/dashboard",
+        "appIcon": "",
+        "includeClientData": true,
+        "acceptsClientConfig": [
+            "ui-notification",
+            "ui-control"
+        ],
+        "showPathInSidebar": false,
+        "headerContent": "page",
+        "navigationStyle": "default",
+        "titleBarStyle": "default",
+        "showReconnectNotification": true,
+        "notificationDisplayTime": 1,
+        "showDisconnectNotification": true,
+        "allowInstall": true
+    },
+    {
+        "id": "9d304b66ab5d7347",
+        "type": "ui-theme",
+        "name": "Default Theme",
+        "colors": {
+            "surface": "#ffffff",
+            "primary": "#0094CE",
+            "bgPage": "#eeeeee",
+            "groupBg": "#ffffff",
+            "groupOutline": "#cccccc"
+        },
+        "sizes": {
+            "density": "default",
+            "pagePadding": "12px",
+            "groupGap": "12px",
+            "groupBorderRadius": "4px",
+            "widgetGap": "12px"
+        }
+    },
+    {
+        "id": "b57246d7bfe279ab",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "@flowfuse/node-red-dashboard": "1.30.2",
+            "node-red-contrib-influxdb": "0.7.0"
+        }
+    }
+]
