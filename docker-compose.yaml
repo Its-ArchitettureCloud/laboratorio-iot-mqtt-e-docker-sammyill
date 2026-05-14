@@ -1,0 +1,190 @@
+x-mqtt-temperature-sensor-base: &mqtt-temperature-sensor-base
+  build: ./sensor-temperature
+  depends_on:
+    - mosquitto
+
+x-mqtt-temperature-sensor-environment: &mqtt-temperature-sensor-environment
+  MIN_VALUE: 20
+  MAX_VALUE: 30
+  INTERVAL_SECONDS: 5
+  MQTT_HOST: mosquitto
+  MQTT_PORT: 883
+  MQTT_USERNAME: ${MQTT_USERNAME:?Set MQTT_USERNAME in .env}
+  MQTT_PASSWORD: ${MQTT_PASSWORD:?Set MQTT_PASSWORD in .env}
+
+x-gateway-temperature-sensor-base: &gateway-temperature-sensor-base
+  build: ./sensor-gateway
+  depends_on:
+    - gateway
+
+x-gateway-temperature-sensor-environment: &gateway-temperature-sensor-environment
+  GATEWAY_HOST: gateway
+  GATEWAY_PORT: 5000
+  MIN_VALUE: 20
+  MAX_VALUE: 30
+  SEND_INTERVAL: 5
+
+
+x-http-sensor-base: &http-sensor-base
+  build: ./sensor-https
+  depends_on:
+    - nodered
+
+x-http-sensor-environment: &http-sensor-environment
+  HTTP_SERVER: nodered
+  HTTP_PORT: 1880
+  HTTP_ENDPOINT: /sensor
+  SEND_INTERVAL: 5
+
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    ports:
+      - "883:883"
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./mosquitto/passwd.txt:/mosquitto/passwd.txt:ro
+
+  gateway:
+    build: ./gateway
+    ports:
+      - "5000:5000"
+    volumes:
+      - gateway-data:/data
+    depends_on:
+      - mosquitto
+    environment:
+      MQTT_BROKER: mosquitto
+      MQTT_PORT: 883
+      MQTT_USERNAME: ${MQTT_USERNAME:?Set MQTT_USERNAME in .env}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:?Set MQTT_PASSWORD in .env}
+      MQTT_TOPIC_TEMPLATE: sensors/{sensor_id}/temperature
+      GATEWAY_DB_PATH: /data/gateway_queue.db
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: iot-smtp
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+  nodered:
+    image: nodered/node-red:latest
+    ports:
+      - "1880:1880"
+    volumes:
+      - nodered-data:/data
+    depends_on:
+      - mosquitto
+      - mailhog
+      - influxdb
+
+  mqtt_temperature_01:
+    <<: *mqtt-temperature-sensor-base
+    environment:
+      <<: *mqtt-temperature-sensor-environment
+      SENSOR_NAME: mqtt_temperature_01
+
+  mqtt_temperature_02:
+    <<: *mqtt-temperature-sensor-base
+    environment:
+      <<: *mqtt-temperature-sensor-environment
+      SENSOR_NAME: mqtt_temperature_02
+
+  mqtt_temperature_03:
+    <<: *mqtt-temperature-sensor-base
+    environment:
+      <<: *mqtt-temperature-sensor-environment
+      SENSOR_NAME: mqtt_temperature_03
+
+  mqtt_temperature_04:
+    <<: *mqtt-temperature-sensor-base
+    environment:
+      <<: *mqtt-temperature-sensor-environment
+      SENSOR_NAME: mqtt_temperature_04
+
+  mqtt_temperature_05:
+    <<: *mqtt-temperature-sensor-base
+    environment:
+      <<: *mqtt-temperature-sensor-environment
+      SENSOR_NAME: mqtt_temperature_05
+
+  gateway_temperature_01:
+    <<: *gateway-temperature-sensor-base
+    environment:
+      <<: *gateway-temperature-sensor-environment
+      SENSOR_ID: gateway_temperature_01
+
+  gateway_temperature_02:
+    <<: *gateway-temperature-sensor-base
+    environment:
+      <<: *gateway-temperature-sensor-environment
+      SENSOR_ID: gateway_temperature_02
+
+  gateway_temperature_03:
+    <<: *gateway-temperature-sensor-base
+    environment:
+      <<: *gateway-temperature-sensor-environment
+      SENSOR_ID: gateway_temperature_03
+
+  gateway_temperature_04:
+    <<: *gateway-temperature-sensor-base
+    environment:
+      <<: *gateway-temperature-sensor-environment
+      SENSOR_ID: gateway_temperature_04
+
+  gateway_temperature_05:
+    <<: *gateway-temperature-sensor-base
+    environment:
+      <<: *gateway-temperature-sensor-environment
+      SENSOR_ID: gateway_temperature_05
+
+  http_sensor_01:
+    <<: *http-sensor-base
+    environment:
+      <<: *http-sensor-environment
+      SENSOR_ID: sensore01
+
+  http_sensor_02:
+    <<: *http-sensor-base
+    environment:
+      <<: *http-sensor-environment
+      SENSOR_ID: sensore02
+
+  http_sensor_03:
+    <<: *http-sensor-base
+    environment:
+      <<: *http-sensor-environment
+      SENSOR_ID: sensore03
+
+  http_sensor_04:
+    <<: *http-sensor-base
+    environment:
+      <<: *http-sensor-environment
+      SENSOR_ID: sensore04
+
+  http_sensor_05:
+    <<: *http-sensor-base
+    environment:
+      <<: *http-sensor-environment
+      SENSOR_ID: sensore05
+
+  influxdb:
+    image: influxdb:2
+    container_name: iot-influxdb
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: ${INFLUXDB_USERNAME}
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${INFLUXDB_PASSWORD}
+      DOCKER_INFLUXDB_INIT_ORG: ${INFLUXDB_ORG}
+      DOCKER_INFLUXDB_INIT_BUCKET: ${INFLUXDB_BUCKET}
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUXDB_TOKEN}
+
+volumes:
+  gateway-data:
+  influxdb-data:
+  nodered-data:
