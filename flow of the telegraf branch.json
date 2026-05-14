@@ -17,65 +17,24 @@
         "wires": []
     },
     {
-        "id": "cb4f19ee63914174",
-        "type": "function",
-        "z": "5e254318e26697a3",
-        "name": "data formatter per dashboard",
-        "func": "let data = msg.payload;\n\nif (Buffer.isBuffer(data)) {\n    data = data.toString();\n}\n\n\nif (typeof data === \"string\") {\n    try {\n        data = JSON.parse(data);\n    } catch (error) {\n        node.warn(\"Invalid JSON: \" + data);\n        return null;\n    }\n}\n\nmsg.topic = data.sensor;\nmsg.payload = Number(data.temperatura);\n\nreturn msg;\n\n ",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 520,
-        "y": 1340,
-        "wires": [
-            [
-                "3486aa33c94e2214",
-                "7c48bd1f794094c6"
-            ]
-        ]
-    },
-    {
-        "id": "46e3179953e34ef7",
-        "type": "http in",
-        "z": "5e254318e26697a3",
-        "name": "",
-        "url": "/sensor",
-        "method": "post",
-        "upload": false,
-        "skipBodyParsing": false,
-        "swaggerDoc": "",
-        "x": 230,
-        "y": 1360,
-        "wires": [
-            [
-                "b67cb3b62510348a",
-                "67cee524490a4c90",
-                "cb4f19ee63914174"
-            ]
-        ]
-    },
-    {
         "id": "3b20e83ec1539f3d",
         "type": "mqtt in",
         "z": "5e254318e26697a3",
         "name": "",
-        "topic": "sensors/#",
-        "qos": "2",
+        "topic": "gateway/aula/temperatura",
+        "qos": "1",
         "datatype": "auto-detect",
         "broker": "46190c69f815be04",
         "nl": false,
         "rap": true,
         "rh": 0,
         "inputs": 0,
-        "x": 240,
-        "y": 1240,
+        "x": 350,
+        "y": 1300,
         "wires": [
             [
-                "cb4f19ee63914174",
-                "b67cb3b62510348a"
+                "bdc098e8f1234b9a",
+                "a5afe523dc0ca851"
             ]
         ]
     },
@@ -135,83 +94,14 @@
         "height": 8,
         "className": "",
         "interpolation": "linear",
-        "x": 800,
-        "y": 1340,
+        "x": 780,
+        "y": 1300,
         "wires": [
             []
         ]
     },
     {
-        "id": "50d9ee7a80a65fa4",
-        "type": "influxdb out",
-        "z": "5e254318e26697a3",
-        "influxdb": "9bdd4dc21704b533",
-        "name": "influxdb",
-        "measurement": "temperature",
-        "precision": "",
-        "retentionPolicy": "",
-        "database": "database",
-        "precisionV18FluxV20": "ms",
-        "retentionPolicyV18Flux": "",
-        "org": "iot",
-        "bucket": "sensors",
-        "x": 760,
-        "y": 1220,
-        "wires": []
-    },
-    {
-        "id": "b67cb3b62510348a",
-        "type": "function",
-        "z": "5e254318e26697a3",
-        "name": "influxdb data formatting",
-        "func": "const myPayload=msg.payload;\nmsg.payload = [\n    {\n        temperature: Number(myPayload.temperatura),\n        //timestamp: myPayload.timestamp,\n    },\n    {\n        sensor: myPayload.sensor,\n        type: myPayload.type,\n        unit: myPayload.unit,\n    }\n];\n\nreturn msg;\n",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 510,
-        "y": 1280,
-        "wires": [
-            [
-                "50d9ee7a80a65fa4"
-            ]
-        ]
-    },
-    {
-        "id": "67cee524490a4c90",
-        "type": "function",
-        "z": "5e254318e26697a3",
-        "name": "httprespnse",
-        "func": "const temperatura = Number(msg.payload.temperatura);\n\nif (!Number.isFinite(temperatura)) {\n    node.warn(\"Invalid temperatura for InfluxDB: \" + JSON.stringify(msg.payload));\n    return null;\n}\n\nmsg.payload = [\n    {\n        value: temperatura\n    },\n    {\n        sensor: msg.sensor_id || \"unknown\",\n        type: \"temperature\",\n        unit: \"celsius\"\n    }\n];\n\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 370,
-        "y": 1480,
-        "wires": [
-            [
-                "babd2cfbae9a3336"
-            ]
-        ]
-    },
-    {
-        "id": "babd2cfbae9a3336",
-        "type": "http response",
-        "z": "5e254318e26697a3",
-        "name": "httpresponse",
-        "statusCode": "",
-        "headers": {},
-        "x": 550,
-        "y": 1480,
-        "wires": []
-    },
-    {
-        "id": "7c48bd1f794094c6",
+        "id": "2beb3f3a87741bf1",
         "type": "debug",
         "z": "5e254318e26697a3",
         "name": "debug 1",
@@ -219,11 +109,88 @@
         "tosidebar": true,
         "console": false,
         "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 840,
+        "y": 1360,
+        "wires": []
+    },
+    {
+        "id": "bdc098e8f1234b9a",
+        "type": "function",
+        "z": "5e254318e26697a3",
+        "name": "data for dashboard",
+        "func": "const payload = msg.payload;\n\nlet temperatura = payload?.temperatura;\n\nif (temperatura === undefined && payload?.fields) {\n    temperatura = payload.fields.temperatura;\n}\n\ntemperatura = Number(temperatura);\n\nif (!Number.isFinite(temperatura)) {\n    node.warn(\"Invalid temperatura: \" + JSON.stringify(payload));\n    return null;\n}\n\nmsg.payload = temperatura;\nmsg.topic = payload?.tags?.sensor || payload?.sensor || \"temperature\";\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 590,
+        "y": 1360,
+        "wires": [
+            [
+                "3486aa33c94e2214",
+                "2beb3f3a87741bf1"
+            ]
+        ]
+    },
+    {
+        "id": "a5afe523dc0ca851",
+        "type": "function",
+        "z": "5e254318e26697a3",
+        "name": "data for nodered",
+        "func": "const payload = msg.payload;\n\n  let temperatura = payload?.temperatura;\n  let sensor = payload?.sensor;\n  let type = payload?.type;\n  let unit = payload?.unit;\n\n  if (payload?.fields) {\n      temperatura = payload.fields.temperatura;\n  }\n\n  if (payload?.tags) {\n      sensor = payload.tags.sensor;\n      type = payload.tags.type;\n      unit = payload.tags.unit;\n  }\n\n  temperatura = Number(temperatura);\n\n  if (!Number.isFinite(temperatura)) {\n      node.warn(\"Invalid temperatura: \" + JSON.stringify(payload));\n      return null;\n  }\n\n  msg.payload = [\n      {\n          temperatura: temperatura\n      },\n      {\n          sensor: sensor || \"unknown\",\n          type: type || \"temperature\",\n          unit: unit || \"celsius\"\n      }\n  ];\n\n  return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 560,
+        "y": 1460,
+        "wires": [
+            [
+                "82019233e3719693",
+                "e787d54c8b24908c"
+            ]
+        ]
+    },
+    {
+        "id": "82019233e3719693",
+        "type": "debug",
+        "z": "5e254318e26697a3",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 720,
-        "y": 1420,
+        "x": 780,
+        "y": 1400,
+        "wires": []
+    },
+    {
+        "id": "e787d54c8b24908c",
+        "type": "influxdb out",
+        "z": "5e254318e26697a3",
+        "influxdb": "9bdd4dc21704b533",
+        "name": "backup for sensor data",
+        "measurement": "temperature_backup",
+        "precision": "",
+        "retentionPolicy": "",
+        "database": "database",
+        "precisionV18FluxV20": "ms",
+        "retentionPolicyV18Flux": "",
+        "org": "iot",
+        "bucket": "sensors_backup",
+        "x": 980,
+        "y": 1480,
         "wires": []
     },
     {
@@ -362,7 +329,7 @@
         }
     },
     {
-        "id": "b57246d7bfe279ab",
+        "id": "35a9854cec09af39",
         "type": "global-config",
         "env": [],
         "modules": {
