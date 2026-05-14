@@ -43,7 +43,7 @@ def build_payload(temperature):
         "type": "temperature",
         "unit": "celsius",
         "temperatura": round(temperature, 2),
-        "timestamp": time.time(), 
+        "timestamp": time.time(),
     }
 
 

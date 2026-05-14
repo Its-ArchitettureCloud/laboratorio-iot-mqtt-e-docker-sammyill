@@ -1,9 +1,12 @@
-FROM python:3.11-slim
+FROM python:3.12-slim
+
+ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-COPY gateway.py .
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-RUN pip install flask paho-mqtt
+COPY gateway.py .
 
 CMD ["python", "gateway.py"]
